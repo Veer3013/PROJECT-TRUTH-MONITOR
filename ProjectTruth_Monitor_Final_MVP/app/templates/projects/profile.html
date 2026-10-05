@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, source_meta, field_value, empty_state, csrf %}
+{% set active_page = "watchlists" %}
+{% set project = project|default({}) %}
+{% set project_id = project.id|default(project_id|default("demo"), true) %}
+{% set facts = facts|default({}) %}
+{% set sources = sources|default([]) %}
+{% set project_tab = "profile" %}
+{% block title %}{{ project.name|default("Project profile", true) }}{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="kicker">Canonical project</span><h1>{{ project.name|default("Project identity pending", true)|e }}</h1><p>{{ project.registration_number|default("Registration unverified", true)|e }} - {{ project.developer_name|default("Developer not recorded", true)|e }} - {{ project.locality_or_sector|default("Location not recorded", true)|e }}</p></div><div class="page-header__actions">{% if project.watchlist_item_id|default("") %}<form action="/api/v1/watchlist-items/{{ project.watchlist_item_id|e }}/refresh" method="post" data-api-form data-success-url="/projects/{{ project_id|e }}">{{ csrf(csrf_token|default("")) }}<input type="hidden" name="idempotency_key" value="{{ project.refresh_idempotency_key|default('manual-' ~ project.watchlist_item_id, true)|e }}"><input type="hidden" name="fixture_key" value="{{ project.fixture_key|default('', true)|e }}"><button class="button button--secondary" type="submit">Run allowed check</button></form>{% endif %}<a class="button button--primary" href="/projects/{{ project_id|e }}/passport">Open Truth Passport</a></div></header>
+{% include "partials/_project_tabs.html" %}
+{{ source_meta(project.primary_source_name|default("No primary source captured"), project.freshness|default("Not yet verified"), project.monitoring_state|default("unverified"), project.source_date|default("")) }}
+
+{% if project.monitoring_state|default("") in ["blocked", "stale", "partial", "degraded"] %}<div class="notice notice--warning" style="margin-top: .8rem"><strong>Monitoring incomplete. Last verified on {{ project.last_verified_at|default("an unavailable date", true)|e }}.</strong><p>{{ project.monitoring_message|default("Some fields could not be verified. Last verified facts remain visible.", true)|e }}</p></div>{% endif %}
+
+<div class="layout-main-aside" style="margin-top: 1rem">
+  <section class="panel" id="source-evidence"><div class="panel__header"><div><h2>Current captured facts</h2><p>Canonical display values remain separate from raw source facts and marketing claims.</p></div>{{ badge(project.identity_status|default("Unverified", true), "success" if project.identity_status|default("") in ["Confirmed", "High confidence"] else "warning") }}</div><dl class="fact-grid">
+    {{ field_value("Project name", facts.project_name|default(project.name|default("")), facts.project_name_note|default("")) }}
+    {{ field_value("Registration number", facts.registration_number|default(project.registration_number|default("")), "Strongest identity key") }}
+    {{ field_value("Promoter / developer", facts.promoter_or_developer|default(project.developer_name|default(""))) }}
+    {{ field_value("Project type", facts.project_type|default("")) }}
+    {{ field_value("State and city", facts.location|default(project.city|default(""))) }}
+    {{ field_value("Locality / sector", facts.locality_or_sector|default(project.locality_or_sector|default(""))) }}
+    {{ field_value("Registration date", facts.registration_date|default("")) }}
+    {{ field_value("Official completion date", facts.revised_completion_date|default(facts.proposed_completion_date|default("")), facts.completion_note|default("Latest captured official value")) }}
+    {{ field_value("Current status", facts.current_status|default(project.current_status|default(""))) }}
+    {{ field_value("Phase", facts.phase|default(project.phase_name|default(""))) }}
+    {{ field_value("Buildings / towers", facts.building_count|default("")) }}
+    {{ field_value("Units", facts.unit_count|default("")) }}
+    {{ field_value("Project / land area", facts.land_or_project_area|default(""), facts.area_unit|default("")) }}
+    {{ field_value("QPR-related flag", facts.qpr_missing_flag|default("Not observed", true), "Exact official flag only") }}
+    {{ field_value("Lapsed flag", facts.lapsed_flag|default("Not observed", true), "Exact captured status only") }}
+    {{ field_value("Source last updated", facts.source_last_updated|default("")) }}
+  </dl></section>
+  <aside class="stack">
+    <section class="panel" id="identity-evidence"><div class="panel__header"><div><h2>Identity</h2><p>Original source names are preserved.</p></div></div><div class="panel__body"><p>{{ badge(project.identity_status|default("Unverified", true), "warning") }}</p><dl class="evidence-reference"><div><dt>Parent project</dt><dd>{{ project.parent_project_name|default("None recorded", true)|e }}</dd></div><div><dt>Phase</dt><dd>{{ project.phase_name|default("Not recorded", true)|e }}</dd></div><div><dt>Aliases</dt><dd>{{ project.alias_count|default(0) }}</dd></div><div><dt>Merge proposals</dt><dd>{{ project.open_merge_proposals|default(0) }}</dd></div></dl><a class="button button--quiet button--small" href="/projects/{{ project_id|e }}/phase-map" style="margin-top: .8rem">View relationship map</a></div></section>
+    <section class="panel"><div class="panel__header"><div><h2>Captured sources</h2><p>Source classes do not overwrite one another.</p></div></div>{% if sources %}<div class="panel__body stack">{% for source in sources %}{{ source_meta(source.name|default("Unnamed source"), source.freshness|default("Unknown"), source.state|default("unverified"), source.source_date|default("")) }}{% endfor %}</div>{% else %}{{ empty_state("No captured sources", "Add a supported official URL or upload an authorized document.") }}{% endif %}</section>
+  </aside>
+</div>
+{% endblock %}

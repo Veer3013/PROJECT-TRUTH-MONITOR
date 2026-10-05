@@ -1,0 +1,11 @@
+SYNTHETIC OCR OUTPUT - LOW CONFIDENCE - NOT AN OFFICIAL FACT
+Document ID: DOC-DEMO-404-SCAN-1
+Project candidate: Metro Square
+Registration candidate: HRERA-DEMO-404
+Page: 3
+OCR text: "Proposed completion 31 December 2029"
+Extraction confidence: 0.43
+Image quality: low; skew and compression artifacts observed
+Expected outcome: NEEDS_REVIEW; keep official completion date null; do not emit a
+confirmed external alert. Preserve this candidate separately from the developer claim
+of June 2029 and reduce monitoring confidence.

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "projecttruth-monitor"
+version = "0.1.0"
+description = "Evidence-first real-estate project monitoring MVP"
+requires-python = ">=3.13"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+asyncio_mode = "auto"
+filterwarnings = [
+  "error::sqlalchemy.exc.SAWarning",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = [
+  "B008",  # FastAPI dependency declarations intentionally call factories in defaults.
+  "E501",  # Black-compatible formatting leaves some URLs and generated metadata intact.
+  "S101",  # Assertions are first-class test and deterministic invariant checks here.
+  "UP046", # Generic[T] remains clearer and is supported by the declared Python runtime.
+  "UP047",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S105", "S106"]

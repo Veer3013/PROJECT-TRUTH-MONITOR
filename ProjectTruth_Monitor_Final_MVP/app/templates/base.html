@@ -1,0 +1,65 @@
+{% set current_user = current_user|default(user|default({})) %}
+{% set organization = organization|default({}) %}
+{% set active_page = active_page|default("") %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#163b36">
+  <title>{% block title %}ProjectTruth Monitor{% endblock %} - ProjectTruth Monitor</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/vendor/htmx.min.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="site-navigation" aria-label="Primary navigation">
+      <a class="brand" href="/dashboard" aria-label="ProjectTruth Monitor home">
+        <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 34 9v10c0 8.8-5.8 15.3-14 18C11.8 34.3 6 27.8 6 19V9l14-6Z"/><path d="m13 20 4.2 4.2L27.8 13.6"/></svg>
+        <span><strong>ProjectTruth</strong><small>Monitor</small></span>
+      </a>
+      <nav class="nav-list">
+        <p class="nav-list__label">Workspace</p>
+        <a href="/dashboard" {% if active_page == 'dashboard' %}aria-current="page"{% endif %}><span aria-hidden="true">&#8962;</span>Overview</a>
+        <a href="/watchlists" {% if active_page == 'watchlists' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9711;</span>Watchlists</a>
+        <a href="/alerts" {% if active_page == 'alerts' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9671;</span>Review queue</a>
+        <a href="/conflicts" {% if active_page == 'conflicts' %}aria-current="page"{% endif %}><span aria-hidden="true">&#8644;</span>Conflicts</a>
+        <p class="nav-list__label">Intelligence</p>
+        <a href="/markets/summary" {% if active_page == 'markets' %}aria-current="page"{% endif %}><span aria-hidden="true">&#8769;</span>Locality pulse</a>
+        <a href="/digest" {% if active_page == 'digest' %}aria-current="page"{% endif %}><span aria-hidden="true">&#8801;</span>Weekly digest</a>
+        <a href="/reports" {% if active_page == 'reports' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9636;</span>Reports</a>
+        <p class="nav-list__label">Operations</p>
+        <a href="/sources/health" {% if active_page == 'sources' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9673;</span>Source health</a>
+        <a href="/organization/members" {% if active_page == 'members' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9817;</span>Members</a>
+        <a href="/audit" {% if active_page == 'audit' %}aria-current="page"{% endif %}><span aria-hidden="true">&#8981;</span>Audit history</a>
+        <a href="/settings/retention" {% if active_page == 'settings' %}aria-current="page"{% endif %}><span aria-hidden="true">&#9881;</span>Settings</a>
+      </nav>
+      <div class="sidebar__footer">
+        <span class="avatar" aria-hidden="true">{{ current_user.display_name|default(current_user.name|default(current_user.email|default("DA", true), true), true)|string|truncate(2, True, '')|upper }}</span>
+        <span class="sidebar__identity"><strong>{{ current_user.display_name|default(current_user.name|default("Demo analyst", true), true)|e }}</strong><small>{{ organization.name|default("Local demo organization", true)|e }}</small></span>
+        <form action="/api/v1/auth/logout" method="post" class="inline-form" data-fetch-form data-success-url="/login"><input type="hidden" name="csrf_token" value="{{ csrf_token|default('', true)|e }}"><button class="icon-button icon-button--inverse" type="submit" aria-label="Sign out">&#8618;</button></form>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="topbar">
+        <button class="icon-button topbar__menu" type="button" data-nav-toggle aria-controls="site-navigation" aria-expanded="false"><span class="sr-only">Open navigation</span>&#9776;</button>
+        <div class="topbar__context"><span class="eyebrow">Organization</span><strong>{{ organization.name|default("Local demo organization", true)|e }}</strong></div>
+        <div class="topbar__status"><span class="status-dot status-dot--{{ overall_source_state|default('healthy')|e }}"></span><span>Sources {{ overall_source_state|default("healthy")|replace("_", " ")|e }}</span><a href="/sources/health">View health</a></div>
+      </header>
+      <main id="main-content" tabindex="-1">
+        {% include "partials/_flash.html" %}
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="site-footer">
+        <p>Decision support from captured public sources and authorized documents. Not legal, title, valuation, or investment advice.</p>
+        <p>ProjectTruth Monitor - Evidence first, uncertainty visible.</p>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

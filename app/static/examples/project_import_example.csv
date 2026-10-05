@@ -1,0 +1,3 @@
+registration_number,project_name,developer_name,city,locality_or_sector,official_url,monitoring_cadence
+HRERA-DEMO-101,Aster Heights Phase II,Aster Demo Developers,Gurugram,Sector 79,https://example.invalid/hrera/HRERA-DEMO-101,weekly
+HRERA-DEMO-303,Orion Greens Phase III,Orion Demo Estates,Gurugram,Sector 79,https://example.invalid/hrera/HRERA-DEMO-303,manual

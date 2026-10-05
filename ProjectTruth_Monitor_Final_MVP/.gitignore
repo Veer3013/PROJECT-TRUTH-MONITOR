@@ -1,0 +1,55 @@
+# Python environments and bytecode
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Test, type-checker, and linter state
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Runtime data - keep source-controlled placeholders only
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/uploads/
+data/reports/
+data/tmp/
+!data/.gitkeep
+
+# Rendered and temporary artifacts
+tmp/
+temp/
+*.tmp
+*.log
+output/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Node tooling is not required, but ignore it if used locally
+node_modules/

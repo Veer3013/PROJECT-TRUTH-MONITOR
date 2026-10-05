@@ -1,0 +1,4 @@
+ProjectTruth Monitor database migrations.
+
+Apply migrations with `python -m alembic upgrade head`. Application startup must
+not call `Base.metadata.create_all()`.

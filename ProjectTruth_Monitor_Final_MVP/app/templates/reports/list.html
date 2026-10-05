@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, source_meta, empty_state, pagination, csrf %}
+{% set active_page = "reports" %}
+{% set reports = reports|default([]) %}
+{% block title %}Reports and downloads{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="kicker">Traceable exports</span><h1>Reports and downloads</h1><p>Draft and approved reports include evidence references, capture timestamps, limitations, and access-controlled artifacts.</p></div><div class="page-header__actions"><button class="button button--primary" type="button" data-disclosure aria-controls="new-report" aria-expanded="false">Create report draft</button></div></header>
+{{ source_meta(report_source_name|default("Reviewed alerts and evidence manifests"), report_freshness|default("No report generated"), report_source_state|default("unverified")) }}
+<section id="new-report" class="panel" hidden style="margin-top: .8rem" aria-labelledby="new-report-heading">
+  <div class="panel__header"><div><h2 id="new-report-heading">Create a report draft</h2><p>Approval is a separate reviewer/admin action.</p></div></div>
+  <form class="panel__body" action="/api/v1/reports" method="post" data-api-form data-success-url="/reports">
+    {{ csrf(csrf_token|default("")) }}
+    <input type="hidden" name="idempotency_key" value="{{ report_idempotency_key|default('report-draft-weekly', true)|e }}">
+    <input type="hidden" name="formats" value="evidence">
+    <div class="form-grid">
+      <div class="field"><label for="report-title">Title</label><input id="report-title" name="name" required maxlength="160" placeholder="Weekly monitored project update"></div>
+      <div class="field"><label for="report-type">Report type</label><select id="report-type" name="report_type"><option value="weekly_digest">Weekly digest</option><option value="project_truth_passport">Project Truth Passport</option><option value="change_ledger">Change ledger</option></select></div>
+      <fieldset class="field field--full"><legend class="field__label">Projects</legend><div class="cluster">
+        {% for project in report_projects|default([]) %}<label class="checkbox-field"><input type="checkbox" name="project_ids" value="{{ project.id|e }}" data-json-list checked><span>{{ project.name|e }}</span></label>{% endfor %}
+      </div><span class="field__hint">The draft includes alerts for the selected monitored projects.</span></fieldset>
+      <fieldset class="field field--full"><legend class="field__label">Formats</legend><div class="cluster"><label class="checkbox-field"><input type="checkbox" name="formats" value="pdf" checked><span>PDF</span></label><label class="checkbox-field"><input type="checkbox" name="formats" value="csv" checked><span>CSV</span></label><label class="checkbox-field"><input type="checkbox" name="formats" value="json" checked><span>JSON</span></label></div></fieldset>
+    </div>
+    <label class="checkbox-field" style="margin-top: 1rem"><input type="checkbox" checked disabled><span><strong>Evidence manifest included</strong><small>Links each item to snapshot IDs, source reference, hash, parser, and review decision.</small></span></label>
+    <div class="form-actions"><button class="button button--primary" type="submit">Create draft</button></div>
+  </form>
+</section>
+<section class="panel" style="margin-top: 1rem" aria-label="Generated reports">
+{% if reports %}<div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Report</th><th scope="col">Period</th><th scope="col">State</th><th scope="col">Evidence</th><th scope="col">Expires</th><th scope="col">Downloads</th></tr></thead><tbody>
+{% for report in reports %}{% set rid = report.id|default(loop.index) %}<tr><td><strong><a href="/reports/{{ rid|e }}">{{ report.title|default("Untitled report", true)|e }}</a></strong><small>Created {{ report.created_at|default("date not recorded", true)|e }} by {{ report.created_by|default("authenticated user", true)|e }}</small></td><td>{{ report.period_label|default("Not recorded", true)|e }}</td><td>{{ badge(report.state|default("Draft", true), "success" if report.state|default("") == "Approved" else "danger" if report.state|default("") == "Expired" else "warning") }}{% if report.blocked_reason|default("") %}<small>{{ report.blocked_reason|e }}</small>{% endif %}</td><td>{{ report.evidence_item_count|default(0) }} items<small>{{ report.unresolved_required_review_count|default(0) }} unresolved required-review</small></td><td>{{ report.expires_at|default("Per retention policy", true)|e }}</td><td>{% if report.available_formats %}<div class="cluster">{% for format in report.available_formats %}<a class="button button--quiet button--small" href="/api/v1/reports/{{ rid|e }}/download?format={{ format|e }}">{{ format|upper|e }}</a>{% endfor %}</div>{% else %}<small>Artifacts not generated or no longer available.</small>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}{{ empty_state("No generated reports", "Create a draft from reviewed monitoring activity. Unresolved high-impact items block final approval.") }}{% endif %}
+</section>
+<div class="notice notice--warning" style="margin-top: .8rem"><strong>Export safeguards</strong><p>Downloads are access controlled. CSV values beginning with =, +, -, or @ are neutralized to reduce spreadsheet formula injection risk.</p></div>{{ pagination(page|default(1), total_pages|default(1), "/reports") }}
+{% endblock %}

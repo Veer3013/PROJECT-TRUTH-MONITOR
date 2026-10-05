@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, csrf %}
+{% set active_page = "watchlists" %}
+{% set preview_rows = preview_rows|default([]) %}
+{% set import_summary = import_summary|default({}) %}
+{% block title %}Import projects{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div><span class="kicker">Dry-run before commit</span><h1>Add projects by CSV</h1><p>Preview validation, identity matches, and duplicates before changing a watchlist.</p></div>
+  <div class="page-header__actions"><a class="button button--quiet" href="/watchlists">Back to watchlists</a></div>
+</header>
+
+<div class="layout-main-aside">
+  <section class="panel">
+    <div class="panel__header"><div><h2>1. Upload and preview</h2><p>The preview does not add or modify projects.</p></div></div>
+    <form class="panel__body" action="/api/v1/imports/projects/preview" method="post" enctype="multipart/form-data" data-csv-preview>
+      {{ csrf(csrf_token|default("")) }}
+      <div class="field"><label for="import-watchlist">Destination watchlist</label><select id="import-watchlist" name="watchlist_id" required><option value="">Choose a watchlist</option>{% for list in watchlists|default([]) %}<option value="{{ list.id|e }}" {% if selected_watchlist_id|default("")|string == list.id|string %}selected{% endif %}>{{ list.name|e }}</option>{% endfor %}</select></div>
+      <div class="upload-zone" style="margin-top: 1rem"><div><label for="csv-file"><strong>Select a CSV file</strong></label><p>UTF-8 CSV, up to {{ max_upload_mb|default(5) }} MB. Formula-like values are treated as text on export.</p><input id="csv-file" data-file-input type="file" name="file" accept=".csv,text/csv" required><p class="field__hint" data-file-name="csv-file">No file selected</p></div></div>
+      <div class="form-actions"><button class="button button--primary" type="submit">Preview import</button><a class="button button--secondary" href="/static/examples/project_import_example.csv" download>Download example</a></div>
+    </form>
+  </section>
+  <aside class="stack">
+    <section class="panel"><div class="panel__header"><div><h2>Supported columns</h2><p>Headers are case-sensitive in the MVP.</p></div></div><div class="panel__body"><ul><li><code>registration_number</code></li><li><code>project_name</code></li><li><code>developer_name</code></li><li><code>city</code></li><li><code>locality_or_sector</code></li><li><code>official_url</code></li><li><code>monitoring_cadence</code></li></ul></div></section>
+    <div class="notice notice--warning"><strong>Identity safety</strong><p>Duplicate exact registrations are reused. Probable aliases require review; they are not auto-merged.</p></div>
+  </aside>
+</div>
+
+{% if preview_rows %}
+<section class="panel" style="margin-top: 1rem" aria-labelledby="preview-heading">
+  <div class="panel__header"><div><h2 id="preview-heading">2. Preview results</h2><p>{{ import_summary.valid_count|default(0) }} ready - {{ import_summary.duplicate_count|default(0) }} duplicates - {{ import_summary.error_count|default(0) }} errors</p></div>{{ badge("Dry run", "info") }}</div>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Row</th><th scope="col">Registration / project</th><th scope="col">Identity outcome</th><th scope="col">Cadence</th><th scope="col">Validation</th></tr></thead><tbody>{% for row in preview_rows %}<tr><td>{{ row.row_number|default(loop.index) }}</td><td><strong>{{ row.registration_number|default("No registration", true)|e }}</strong><small>{{ row.project_name|default("Name not provided", true)|e }} - {{ row.developer_name|default("Developer not provided", true)|e }}</small></td><td>{{ badge(row.identity_outcome|default("Needs review", true), "success" if row.identity_outcome|default("") in ["New", "Existing canonical"] else "warning") }}</td><td>{{ row.monitoring_cadence|default("weekly", true)|e }}</td><td>{% if row.errors|default([]) %}{% for error in row.errors %}<span class="field__error">{{ error|e }}</span>{% endfor %}{% else %}{{ badge("Valid", "success") }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  <form class="panel__footer" action="/api/v1/imports/projects/commit" method="post" data-api-form data-success-url="/watchlists/{{ selected_watchlist_id|default('')|e }}">
+    {{ csrf(csrf_token|default("")) }}<input type="hidden" name="watchlist_id" value="{{ selected_watchlist_id|default('', true)|e }}"><input type="hidden" name="preview_token" value="{{ preview_token|default('', true)|e }}"><input type="hidden" name="idempotency_key" value="{{ import_idempotency_key|default('csv-preview-commit', true)|e }}">
+    <div class="cluster"><button class="button button--primary" type="submit" {% if import_summary.error_count|default(0)|int > 0 %}disabled{% endif %}>Commit valid rows</button><span class="field__hint">The preview token and idempotency key make a retried commit safe.</span></div>
+  </form>
+</section>
+{% endif %}
+
+<section id="csv-preview-live" class="panel" style="margin-top: 1rem" hidden aria-labelledby="csv-preview-live-heading">
+  <div class="panel__header"><div><h2 id="csv-preview-live-heading">2. Preview results</h2><p data-preview-summary>Preview ready</p></div>{{ badge("Dry run", "info") }}</div>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Row</th><th scope="col">Registration / project</th><th scope="col">Developer</th><th scope="col">Cadence</th><th scope="col">Validation</th></tr></thead><tbody></tbody></table></div>
+  <form class="panel__footer" action="/api/v1/imports/projects/commit" method="post" data-api-form data-csv-commit data-success-url="/watchlists">
+    {{ csrf(csrf_token|default("")) }}<input type="hidden" name="watchlist_id"><input type="hidden" name="preview_token"><input type="hidden" name="idempotency_key"><button class="button button--primary" type="submit">Commit valid rows</button>
+  </form>
+</section>
+{% endblock %}

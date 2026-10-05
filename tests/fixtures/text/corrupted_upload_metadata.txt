@@ -1,0 +1,10 @@
+FIXTURE CONTRACT: CORRUPTED UPLOAD REJECTION
+Synthetic input name: damaged-brochure.pdf
+Claimed MIME: application/pdf
+Detected signature: invalid or truncated
+Parser result: cannot open cross-reference table
+Expected category: CORRUPTED_UPLOAD
+Expected safe message: We could not reliably read this document. Upload a clearer copy or review it manually.
+Expected storage result: quarantine or reject according to storage policy; create no claims.
+
+This text contract is supplied instead of a binary file in the UI/docs fixture slice.

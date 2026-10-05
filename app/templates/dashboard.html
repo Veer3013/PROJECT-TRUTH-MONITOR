@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, metric, source_meta, empty_state %}
+{% set active_page = "dashboard" %}
+{% set stats = stats|default({}) %}
+{% set recent_alerts = recent_alerts|default([]) %}
+{% set recent_activity = recent_activity|default([]) %}
+{% set source_summary = source_summary|default({}) %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div><span class="kicker">Evidence workspace</span><h1>Monitoring overview</h1><p>A current view of captured facts, checks, review work, and source coverage. Counts reflect only your organization's monitored dataset.</p></div>
+  <div class="page-header__actions"><a class="button button--secondary" href="/watchlists/import">Import projects</a><a class="button button--primary" href="/watchlists">Open watchlists</a></div>
+</header>
+
+<section class="metric-grid" aria-label="Monitoring summary">
+  {{ metric("Projects monitored", stats.projects_monitored|default(0), stats.project_hint|default("Across active watchlists"), "ink", "/watchlists") }}
+  {{ metric("Checks due / complete", (stats.checks_due|default(0)|string) ~ " / " ~ (stats.checks_complete|default(0)|string), "Current monitoring window", "info", "/sources/health") }}
+  {{ metric("Changes detected", stats.changes_detected|default(0), "Field-level changes this week", "warning", "/digest") }}
+  {{ metric("Awaiting review", stats.alerts_awaiting_review|default(0), "Human decision required", "danger", "/alerts") }}
+</section>
+
+<section class="grid grid--3" style="margin-top: .75rem" aria-label="Operational indicators">
+  {{ metric("Source degradation", stats.source_degradation|default(0), "Incomplete or failed checks", "warning", "/sources/health") }}
+  {{ metric("Unresolved conflicts", stats.unresolved_conflicts|default(0), "Source values preserved", "danger", "/conflicts") }}
+  {{ metric("Latest digest", stats.latest_digest_label|default("Not generated"), stats.latest_digest_hint|default("Weekly evidence summary"), "success", "/digest") }}
+</section>
+
+<div class="layout-main-aside" style="margin-top: 1.2rem">
+  <section class="panel" aria-labelledby="review-heading">
+    <div class="panel__header"><div><h2 id="review-heading">Priority review</h2><p>Material or uncertain items that need a recorded human decision.</p></div><a href="/alerts">View queue</a></div>
+    {% if recent_alerts %}
+    <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Project and signal</th><th scope="col">Observed</th><th scope="col">Confidence</th><th scope="col">State</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>
+      {% for alert in recent_alerts %}
+      {% set alert_id = alert.id|default(loop.index) %}
+      <tr><td><strong>{{ alert.project_name|default("Project pending identity review", true)|e }}</strong><small>{{ alert.title|default(alert.rule_code|default("Needs review"), true)|replace("_", " ")|e }}</small></td><td>{{ alert.observed_at|default("Not recorded", true)|e }}</td><td>{{ badge(alert.confidence|default("Needs review", true), "warning" if alert.confidence|default("") in ["Needs review", "Probable"] else "success") }}</td><td>{{ badge(alert.review_state|default("Open", true), "danger" if alert.review_state|default("open") == "open" else "neutral") }}</td><td class="data-table__actions"><a class="button button--quiet button--small" href="/alerts/{{ alert_id|e }}">Review</a></td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    {% else %}{{ empty_state("No items need review", "New material, uncertain, or conflicting changes will appear here with evidence.") }}{% endif %}
+  </section>
+
+  <aside class="stack">
+    <section class="panel"><div class="panel__header"><div><h2>Source coverage</h2><p>Last completed monitoring window.</p></div></div><div class="panel__body">
+      {{ source_meta(source_summary.source_name|default("Configured sources"), source_summary.freshness|default("No completed check"), source_summary.state|default("unverified"), source_summary.source_date|default("")) }}
+      <div class="confidence-row"><div class="confidence-row__label"><span>Successful checks</span><strong>{{ source_summary.success_rate|default(0) }}%</strong></div><div class="progress"><span style="width: {{ source_summary.success_rate|default(0)|int }}%"></span></div></div>
+      <div class="notice notice--warning" style="margin-top: .8rem"><strong>Source honesty</strong><p>Incomplete checks do not become &quot;no change.&quot; Last verified facts remain visible with their date.</p></div>
+    </div></section>
+    <section class="panel"><div class="panel__header"><div><h2>Latest activity</h2><p>Evidence and audit-linked events.</p></div></div><div class="panel__body">
+      {% if recent_activity %}<ol class="timeline">{% for event in recent_activity[:4] %}<li class="timeline__item"><span class="timeline__dot timeline__dot--{{ event.tone|default('verified')|e }}"></span><div><div class="timeline__meta"><time>{{ event.timestamp|default("Time not recorded", true)|e }}</time></div><h3>{{ event.title|default("Monitoring activity", true)|e }}</h3><p>{{ event.description|default("See audit history for details.", true)|e }}</p></div></li>{% endfor %}</ol>{% else %}<p class="disclaimer">No activity has been recorded yet.</p>{% endif %}
+    </div></section>
+  </aside>
+</div>
+{% endblock %}

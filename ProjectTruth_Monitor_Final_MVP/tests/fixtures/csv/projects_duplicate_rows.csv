@@ -1,0 +1,5 @@
+registration_number,project_name,developer_name,city,locality_or_sector,official_url,monitoring_cadence
+HRERA-DEMO-101,Aster Heights Phase II,Aster Demo Developers Private Limited,Gurugram,Sector 79,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-101,weekly
+HRERA-DEMO-101,Aster Heights Phase 2,Aster Demo Developers Private Limited,Gurugram,Sector 79,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-101,daily
+,Sunrise Avenue,Sunrise Demo Realty Limited,Gurugram,Sector 92,,weekly
+,Sun Rise Avenue,Northstar Demo Builders LLP,Gurugram,Sector 93,,weekly

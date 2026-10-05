@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, source_meta, empty_state, csrf %}
+{% set active_page = "watchlists" %}
+{% set project = project|default({}) %}
+{% set project_id = project.id|default(project_id|default("demo"), true) %}
+{% set documents = documents|default([]) %}
+{% set comparisons = comparisons|default([]) %}
+{% set project_tab = "documents" %}
+{% block title %}Brochure comparison - {{ project.name|default("Project", true) }}{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div>
+    <span class="kicker">Authorized documents</span>
+    <h1>Brochure upload and comparison</h1>
+    <p>{{ project.name|default("Project", true)|e }} - Marketing claims remain separate from captured official facts.</p>
+  </div>
+</header>
+{% include "partials/_project_tabs.html" %}
+{{ source_meta(document_source_name|default("User-authorized documents"), document_freshness|default("No document processed"), document_state|default("unverified")) }}
+
+<div class="layout-main-aside" style="margin-top: 1rem">
+  <section class="panel">
+    <div class="panel__header">
+      <div>
+        <h2>Upload a brochure or project PDF</h2>
+        <p>The file is validated, hashed, and stored outside the web root.</p>
+      </div>
+    </div>
+    {% if can_manage_documents %}
+    <form class="panel__body" action="/api/v1/projects/{{ project_id|e }}/documents" method="post" enctype="multipart/form-data" data-multipart-form data-success-url="/projects/{{ project_id|e }}/documents">
+      {{ csrf(csrf_token|default("")) }}
+      <div class="upload-zone">
+        <div>
+          <label for="brochure-file"><strong>Choose an authorized PDF</strong></label>
+          <p>PDF only, up to {{ max_upload_mb|default(15) }} MB. Encrypted, password-protected, corrupted, or signature-mismatched files are rejected.</p>
+          <input id="brochure-file" data-file-input type="file" name="file" accept="application/pdf,.pdf" required>
+          <p class="field__hint" data-file-name="brochure-file">No file selected</p>
+        </div>
+      </div>
+      <label class="checkbox-field" style="margin-top: 1rem">
+        <input type="checkbox" name="authorization_attested" value="true" required>
+        <span><strong>I am authorized to upload and process this document.</strong><small>The document will be handled under the organization's retention settings.</small></span>
+      </label>
+      <div class="field" style="margin-top: 1rem">
+        <label for="rights-attestation">Authorization note</label>
+        <input id="rights-attestation" name="rights_attestation_text" maxlength="2000" value="Authorized by the uploader">
+      </div>
+      <div class="form-actions"><button class="button button--primary" type="submit">Upload document</button></div>
+    </form>
+    {% else %}
+    <div class="panel__body"><p class="disclaimer">Viewer access is read-only. An analyst, reviewer, or admin can upload documents.</p></div>
+    {% endif %}
+  </section>
+  <aside class="stack">
+    <div class="notice">
+      <strong>Deterministic safeguards</strong>
+      <p>Document claims never overwrite official facts. Low-confidence OCR-derived core fields are routed to human review.</p>
+    </div>
+    <div class="notice notice--warning">
+      <strong>If a document cannot be read</strong>
+      <p>We could not reliably read this document. Upload a clearer copy or review it manually.</p>
+    </div>
+    <section class="panel">
+      <div class="panel__header"><div><h2>Optional providers</h2><p>The application works without OCR or LLM credentials.</p></div></div>
+      <div class="panel__body">
+        <div class="cluster">{{ badge("OCR " ~ ocr_state|default("disabled"), "neutral") }}{{ badge("LLM " ~ llm_state|default("disabled"), "neutral") }}</div>
+        <p class="field__hint">Optional providers extract candidate claims only; they cannot write official facts.</p>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<section class="panel" style="margin-top: 1rem">
+  <div class="panel__header"><div><h2>Documents and latest versions</h2><p>Open a document to extract, compare, or upload a new immutable revision.</p></div></div>
+  {% if documents %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th scope="col">Document</th><th scope="col">Version / hash</th><th scope="col">Extraction</th><th scope="col">Claims</th><th scope="col">Uploaded</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+      <tbody>
+      {% for document in documents %}
+        <tr>
+          <td><strong>{{ document.label|default("Authorized PDF", true)|e }}</strong><small>{{ document.safe_filename|default("Filename hidden", true)|e }}</small></td>
+          <td>v{{ document.version|default(1) }}<small class="code">{{ document.content_hash|default("Hash pending", true)|truncate(18, True, '...')|e }}</small></td>
+          <td>{{ badge(document.extraction_state|default("Pending", true), "success" if document.extraction_state == "Complete" else "warning") }}<small>{{ document.extraction_method|default("Not processed", true)|e }}</small></td>
+          <td>{{ document.claim_count|default(0) }}</td>
+          <td>{{ document.uploaded_at|default("Not recorded", true)|e }}</td>
+          <td class="data-table__actions"><a class="button button--quiet button--small" href="/projects/{{ project_id|e }}/documents?document_id={{ document.id|e }}">Open workflow</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {{ empty_state("No authorized documents", "Upload a PDF to extract page-linked marketing claims for comparison.") }}
+  {% endif %}
+</section>
+
+{% if selected_document %}
+<section class="panel" style="margin-top: 1rem" aria-labelledby="selected-document-heading">
+  <div class="panel__header">
+    <div>
+      <span class="kicker">Selected document</span>
+      <h2 id="selected-document-heading">{{ selected_document.label|e }} - v{{ selected_document.version }}</h2>
+      <p class="code">SHA-256 {{ selected_document.content_hash|e }}</p>
+    </div>
+    {{ badge(selected_document.extraction_state, "success" if selected_document.extraction_state == "Complete" else "warning") }}
+  </div>
+  <div class="panel__body stack">
+    <div class="cluster">
+      <a class="button button--secondary button--small" href="/api/v1/documents/{{ selected_document.id|e }}/download">Download latest PDF</a>
+      {% if can_manage_documents %}
+      <form action="/api/v1/documents/{{ selected_document.id|e }}/extract" method="post" data-api-form data-success-url="/projects/{{ project_id|e }}/documents?document_id={{ selected_document.id|e }}">
+        {{ csrf(csrf_token|default("")) }}
+        <input type="hidden" name="use_ocr_if_needed" value="true">
+        <button class="button button--primary button--small" type="submit">Extract latest version</button>
+      </form>
+      <form action="/api/v1/documents/{{ selected_document.id|e }}/compare" method="post" data-api-form data-success-url="/projects/{{ project_id|e }}/documents?document_id={{ selected_document.id|e }}">
+        {{ csrf(csrf_token|default("")) }}
+        <button class="button button--primary button--small" type="submit">Compare with official record</button>
+      </form>
+      {% endif %}
+    </div>
+    {% if selected_extraction %}
+    <dl class="evidence-reference">
+      <div><dt>Method</dt><dd>{{ selected_extraction.method|default("Not recorded", true)|e }}</dd></div>
+      <div><dt>Review state</dt><dd>{{ "Human review required" if selected_extraction.requires_review else "Deterministic extraction complete" }}</dd></div>
+      <div><dt>Malware scan</dt><dd>{{ selected_document.malware_scan_status|replace("_", " ")|e }} (local stub unless configured)</dd></div>
+    </dl>
+    {% if selected_extraction.warnings %}
+    <div class="notice notice--warning"><strong>Extraction limitations</strong><ul>{% for warning in selected_extraction.warnings %}<li>{{ warning|e }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    {% else %}
+    <div class="notice"><strong>Extraction not run</strong><p>Run deterministic text extraction. If searchable text is unavailable, the document remains in manual review and optional OCR is attempted only when configured.</p></div>
+    {% endif %}
+  </div>
+  {% if can_manage_documents %}
+  <div class="panel__footer">
+    <form action="/api/v1/documents/{{ selected_document.id|e }}/versions" method="post" enctype="multipart/form-data" data-multipart-form data-success-url="/projects/{{ project_id|e }}/documents?document_id={{ selected_document.id|e }}">
+      {{ csrf(csrf_token|default("")) }}
+      <div class="form-grid">
+        <div class="field"><label for="revision-file">Upload revised PDF as v{{ selected_document.version + 1 }}</label><input id="revision-file" type="file" name="file" accept="application/pdf,.pdf" required></div>
+        <div class="field"><label for="revision-note">Authorization note</label><input id="revision-note" name="rights_attestation_text" maxlength="2000" value="Authorized revised document"></div>
+      </div>
+      <label class="checkbox-field"><input type="checkbox" name="authorization_attested" value="true" required><span>I am authorized to upload this revision.</span></label>
+      <div class="form-actions"><button class="button button--secondary" type="submit">Create immutable revision</button></div>
+    </form>
+  </div>
+  {% endif %}
+</section>
+
+{% if selected_document_versions %}
+<section class="panel" style="margin-top: 1rem">
+  <div class="panel__header"><div><h2>Version history</h2><p>Every revision retains its own hash and capture timestamp.</p></div></div>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Version</th><th scope="col">SHA-256</th><th scope="col">Captured</th><th scope="col">Scan state</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>
+  {% for version in selected_document_versions %}<tr><td><strong>v{{ version.version }}</strong></td><td class="code">{{ version.content_hash|e }}</td><td>{{ version.uploaded_at|e }}</td><td>{{ version.malware_scan_status|replace("_", " ")|e }}</td><td><a class="button button--quiet button--small" href="/api/v1/documents/{{ selected_document.id|e }}/versions/{{ version.id|e }}/download">Download</a></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endif %}
+{% endif %}
+
+{% if selected_document and comparisons %}
+<section class="panel" style="margin-top: 1rem">
+  <div class="panel__header"><div><h2>Brochure versus captured official record</h2><p>Marketing claims remain separate and preserve page-linked evidence.</p></div>{{ badge(comparison_summary|default("Needs review"), "warning") }}</div>
+  <div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Field</th><th scope="col">Marketing claim</th><th scope="col">Official fact</th><th scope="col">State</th><th scope="col">Evidence</th></tr></thead><tbody>
+  {% for comparison in comparisons %}
+    <tr>
+      <td><strong>{{ comparison.field_label|e }}</strong></td>
+      <td>{{ comparison.marketing_value|default("Not present", true)|e }}<small>{{ comparison.evidence_text|e }}</small></td>
+      <td>{{ comparison.official_value|default("Not present", true)|e }}<small>{{ comparison.official_source|e }}</small></td>
+      <td>{{ badge(comparison.state|replace("_", " "), "success" if comparison.state == "MATCHED" else "warning") }}</td>
+      <td>Page {{ comparison.page|e }}<small>{{ comparison.extraction_method|e }} - {{ ((comparison.extraction_confidence|default(0)) * 100)|round|int }}%</small></td>
+    </tr>
+  {% endfor %}
+  </tbody></table></div>
+  <div class="panel__footer"><p class="disclaimer">Marketing claim conflicts with the currently captured official record. This does not automatically establish a legal violation.</p></div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, source_meta, empty_state, pagination, csrf %}
+{% set active_page = "watchlists" %}
+{% set watchlists = watchlists|default([]) %}
+{% block title %}Watchlists{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="kicker">Monitoring scope</span><h1>Watchlists</h1><p>Group exact registrations and reviewed project identities by research purpose and monitoring cadence.</p></div><div class="page-header__actions"><a class="button button--secondary" href="/watchlists/import">CSV import</a><button class="button button--primary" type="button" data-disclosure aria-controls="new-watchlist" aria-expanded="false">New watchlist</button></div></header>
+
+<section id="new-watchlist" class="panel" hidden aria-labelledby="new-watchlist-heading" style="margin-bottom: 1rem"><div class="panel__header"><div><h2 id="new-watchlist-heading">Create watchlist</h2><p>You can add exact registrations after creating the list.</p></div></div><form class="panel__body" action="/api/v1/watchlists" method="post" data-api-form data-success-url="/watchlists">{{ csrf(csrf_token|default("")) }}<div class="form-grid"><div class="field"><label for="watchlist-name">Watchlist name</label><input id="watchlist-name" name="name" required maxlength="120" placeholder="Gurugram delivery watch"></div><div class="field"><label for="cadence">Monitoring cadence</label><select id="cadence" name="monitoring_cadence"><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="manual">Manual</option></select></div></div><div class="form-actions"><button class="button button--primary" type="submit">Create watchlist</button><button class="button button--quiet" type="button" data-disclosure aria-controls="new-watchlist" aria-expanded="true">Cancel</button></div></form></section>
+
+<div class="filter-bar"><div class="field filter-bar__search"><label for="watchlist-search">Filter watchlists</label><input class="table-filter" id="watchlist-search" type="search" placeholder="Name, owner, or cadence" data-table-filter="watchlist-table"></div></div>
+<section class="panel" style="margin-top: .75rem" aria-label="Watchlists">
+{% if watchlists %}<div class="table-wrap"><table class="data-table" id="watchlist-table"><thead><tr><th scope="col">Watchlist</th><th scope="col">Projects</th><th scope="col">Cadence</th><th scope="col">Next check</th><th scope="col">Coverage</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>
+{% for item in watchlists %}{% set wid = item.id|default(loop.index) %}<tr><td><strong><a href="/watchlists/{{ wid|e }}">{{ item.name|default("Untitled watchlist", true)|e }}</a></strong><small>{{ item.description|default("No description", true)|e }}</small></td><td>{{ item.project_count|default(0) }}</td><td>{{ badge(item.monitoring_cadence|default("manual", true), "info") }}</td><td>{{ item.next_check_at|default("Manual", true)|e }}</td><td>{{ badge(item.coverage_state|default("Unverified", true), "success" if item.coverage_state|default("") == "Current" else "warning") }}</td><td class="data-table__actions"><a class="button button--quiet button--small" href="/watchlists/{{ wid|e }}">Open</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}{{ empty_state("No watchlists yet", "Create a focused watchlist, then add exact RERA registrations or preview a CSV import.", "Create a watchlist", "#new-watchlist") }}{% endif %}
+</section>
+{{ pagination(page|default(1), total_pages|default(1), "/watchlists") }}
+{% endblock %}

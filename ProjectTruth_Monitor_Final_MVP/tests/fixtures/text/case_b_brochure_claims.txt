@@ -1,0 +1,21 @@
+SYNTHETIC AUTHORIZED DOCUMENT FIXTURE - NOT A REAL BROCHURE
+Document ID: DOC-DEMO-202-V1
+Project: Lakeview Residences
+Registration: HRERA-DEMO-202
+Version date: 15 February 2026
+
+PAGE 4
+Six residential towers arranged around a landscaped central court.
+Evidence locator: page=4; paragraph=2
+
+PAGE 7
+1,200 thoughtfully planned homes.
+Evidence locator: page=7; paragraph=1
+
+PAGE 12
+Possession expected by December 2027.
+Evidence locator: page=12; paragraph=3
+
+Expected comparison states: CONFLICTING for building_count, unit_count,
+and possession/completion date. These are marketing claims and must not overwrite
+captured official facts.

@@ -1,0 +1,64 @@
+{% macro badge(label, tone="neutral", icon="") -%}
+<span class="badge badge--{{ tone|e }}">{% if icon %}<span aria-hidden="true">{{ icon }}</span>{% endif %}{{ label|default("Unknown", true)|e }}</span>
+{%- endmacro %}
+
+{% macro source_meta(source_name="Source not recorded", freshness="Not yet verified", state="unverified", source_date="") -%}
+<div class="source-meta" aria-label="Source and freshness">
+  <span class="source-meta__item"><span class="source-meta__label">Source</span>{{ source_name|default("Source not recorded", true)|e }}</span>
+  <span class="source-meta__divider" aria-hidden="true"></span>
+  <span class="source-meta__item"><span class="source-meta__label">Freshness</span>{{ freshness|default("Not yet verified", true)|e }}</span>
+  {% if source_date %}<span class="source-meta__item"><span class="source-meta__label">Source date</span>{{ source_date|e }}</span>{% endif %}
+  {{ badge(state|replace("_", " ")|title, "success" if state in ["current", "verified", "healthy"] else "warning" if state in ["stale", "partial", "degraded"] else "neutral") }}
+</div>
+{%- endmacro %}
+
+{% macro metric(label, value, hint="", tone="ink", href="") -%}
+<{% if href %}a href="{{ href|e }}"{% else %}div{% endif %} class="metric metric--{{ tone|e }}">
+  <span class="metric__label">{{ label|e }}</span>
+  <strong class="metric__value">{{ value|default("-", true)|e }}</strong>
+  {% if hint %}<span class="metric__hint">{{ hint|e }}</span>{% endif %}
+</{% if href %}a{% else %}div{% endif %}>
+{%- endmacro %}
+
+{% macro empty_state(title, body, action_label="", action_href="") -%}
+<div class="empty-state">
+  <span class="empty-state__mark" aria-hidden="true">&#9678;</span>
+  <h3>{{ title|e }}</h3>
+  <p>{{ body|e }}</p>
+  {% if action_label and action_href %}<a class="button button--secondary" href="{{ action_href|e }}">{{ action_label|e }}</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro field_value(label, value, note="", status="") -%}
+<div class="fact">
+  <dt>{{ label|e }}</dt>
+  <dd>{{ value|default("Not available", true)|e }}</dd>
+  {% if note %}<span class="fact__note">{{ note|e }}</span>{% endif %}
+  {% if status %}{{ badge(status, "neutral") }}{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro confidence_dimension(label, band="Unverified", value=0, note="") -%}
+{% set safe_value = value|default(0, true)|int %}
+<div class="confidence-row">
+  <div class="confidence-row__label"><span>{{ label|e }}</span><strong>{{ band|default("Unverified", true)|e }}</strong></div>
+  <div class="confidence-track" role="meter" aria-label="{{ label|e }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ safe_value }}">
+    <span style="width: {{ [0, [safe_value, 100]|min]|max }}%"></span>
+  </div>
+  {% if note %}<p>{{ note|e }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro pagination(page=1, total_pages=1, base_url="") -%}
+{% if total_pages|int > 1 %}
+<nav class="pagination" aria-label="Pagination">
+  {% if page|int > 1 %}<a class="button button--quiet" href="{{ base_url|e }}?page={{ page|int - 1 }}">Previous</a>{% else %}<span></span>{% endif %}
+  <span>Page {{ page|int }} of {{ total_pages|int }}</span>
+  {% if page|int < total_pages|int %}<a class="button button--quiet" href="{{ base_url|e }}?page={{ page|int + 1 }}">Next</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{% macro csrf(value="") -%}
+<input type="hidden" name="csrf_token" value="{{ value|default('', true)|e }}">
+{%- endmacro %}

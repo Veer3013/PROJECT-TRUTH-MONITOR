@@ -1,0 +1,3 @@
+registration_number,project_name,developer_name,city,locality_or_sector,official_url,monitoring_cadence
+HRERA-DEMO-F01,"=HYPERLINK(""https://malicious.invalid"",""click"")",+Demo Developer,Gurugram,@Sector 1,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-F01,weekly
+HRERA-DEMO-F02,-Formula-like Project,"@SUM(1+1)",Gurugram,"+Sector 2",https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-F02,manual

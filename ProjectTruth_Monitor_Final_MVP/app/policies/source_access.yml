@@ -1,0 +1,63 @@
+schema_version: "1.0"
+policies:
+  - id: fixture-hrera-demo-v1
+    source_name: ProjectTruth frozen HRERA demo fixtures
+    source_type: synthetic_regulator_fixture
+    source_class: official_regulator
+    base_url: "https://fixtures.projecttruth.invalid/"
+    allowed_domains:
+      - fixtures.projecttruth.invalid
+    enabled: true
+    permitted_access_modes:
+      - fixture
+    rate_limit_seconds: 0
+    request_timeout_seconds: 5
+    max_response_bytes: 2097152
+    max_redirects: 0
+    allowed_schemes:
+      - https
+    robots_review_status: not_applicable_synthetic_fixture
+    terms_review_status: consented_synthetic_content
+    evidence_retention_policy: retain_structured_facts_hash_and_fixture_excerpt
+    may_store_raw_content: true
+    playwright_allowed: false
+    ocr_allowed: false
+    llm_processing_allowed: false
+    policy_version: "1.0.0"
+    reviewer: projecttruth_demo_policy
+    reviewed_at: "2026-07-01T00:00:00Z"
+    notes: >-
+      Frozen synthetic content for tests and local demonstration. It does not represent
+      any real project, developer, registration, or regulator record.
+
+  - id: hrera-gurugram-public-v1
+    source_name: HRERA Gurugram
+    source_type: official_regulator
+    source_class: official_regulator
+    base_url: "https://haryanarera.gov.in/"
+    allowed_domains:
+      - haryanarera.gov.in
+      - www.haryanarera.gov.in
+    enabled: false
+    permitted_access_modes:
+      - httpx
+    rate_limit_seconds: 3
+    request_timeout_seconds: 15
+    max_response_bytes: 8388608
+    max_redirects: 3
+    allowed_schemes:
+      - https
+    robots_review_status: review_required_before_enablement
+    terms_review_status: review_required_before_enablement
+    evidence_retention_policy: structured_facts_hash_and_minimum_permitted_excerpt
+    may_store_raw_content: false
+    playwright_allowed: false
+    ocr_allowed: false
+    llm_processing_allowed: false
+    policy_version: "1.0.0-draft"
+    reviewer: null
+    reviewed_at: null
+    notes: >-
+      Disabled by default. An administrator must document a current robots and terms
+      review before live access is enabled. The collector must stop on authentication,
+      CAPTCHA, access restriction, unsafe redirects, or material layout change.

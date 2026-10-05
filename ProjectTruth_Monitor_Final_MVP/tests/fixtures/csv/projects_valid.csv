@@ -1,0 +1,5 @@
+registration_number,project_name,developer_name,city,locality_or_sector,official_url,monitoring_cadence
+HRERA-DEMO-101,Aster Heights Phase II,Aster Demo Developers Private Limited,Gurugram,Sector 79,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-101,weekly
+HRERA-DEMO-202,Lakeview Residences,Lakeview Demo Realty Limited,Gurugram,Sector 88,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-202,daily
+HRERA-DEMO-303,Orion Greens Phase III,Orion Demo Estates Limited,Gurugram,Sector 79,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-303,manual
+HRERA-DEMO-404,Metro Square,Metro Demo Developments LLP,Gurugram,Sector 65,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-404,weekly

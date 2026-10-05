@@ -1,0 +1,11 @@
+FIXTURE CONTRACT: ENCRYPTED PDF REJECTION
+Synthetic input name: protected-brochure.pdf
+Detected MIME: application/pdf
+Signature: %PDF-
+Encrypted flag: true
+Password supplied: false
+Expected category: ENCRYPTED_OR_PASSWORD_PROTECTED
+Expected safe message: The PDF is password-protected. Upload an authorized unprotected copy.
+Expected storage result: no accepted document version and no extracted official fact.
+
+This text contract is supplied instead of a binary PDF in the UI/docs fixture slice.

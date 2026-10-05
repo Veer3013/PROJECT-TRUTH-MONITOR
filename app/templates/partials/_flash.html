@@ -1,0 +1,12 @@
+{% set notices = flash_messages|default(messages|default([])) %}
+{% if notices %}
+<div class="flash-stack" aria-live="polite" aria-atomic="true">
+  {% for notice in notices %}
+  {% set notice_kind = notice.kind|default(notice.category|default("info")) %}
+  <div class="flash flash--{{ notice_kind|e }}" role="{{ 'alert' if notice_kind == 'error' else 'status' }}">
+    <div><strong>{{ notice.title|default("Update", true)|e }}</strong><p>{{ notice.message|default(notice, true)|e }}</p></div>
+    <button type="button" class="icon-button" data-dismiss aria-label="Dismiss message">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

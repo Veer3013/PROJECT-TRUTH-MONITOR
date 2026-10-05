@@ -1,0 +1,8 @@
+FIXTURE CONTRACT: CROSS-ORGANIZATION ACCESS DENIAL
+Authenticated organization: org-demo-alpha
+Requested project owner: org-demo-bravo
+Requested project ID: project-demo-bravo-1
+Requested artifact ID: report-demo-bravo-1
+Expected API outcome: 404 or policy-safe 403 with no resource details
+Expected HTML outcome: safe access-denied page with no project, source, evidence, path, or tenant data
+Expected audit outcome: denied access event attributed to the authenticated user and request ID

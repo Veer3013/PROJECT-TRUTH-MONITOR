@@ -1,0 +1,5 @@
+registration_number,project_name,developer_name,city,locality_or_sector,official_url,monitoring_cadence
+HRERA-DEMO-505,Cedar Court,Cedar Demo Homes Limited,Gurugram,Sector 70,https://fixtures.projecttruth.invalid/projects/HRERA-DEMO-505,monthly
+,,,,,,weekly
+HRERA-DEMO-UNSUPPORTED,Unsupported URL Demo,Demo Builder,Gurugram,Sector 1,http://127.0.0.1/private,weekly
+HRERA-DEMO-PRIVATE,Private Network Demo,Demo Builder,Gurugram,Sector 2,http://169.254.169.254/latest/meta-data,manual

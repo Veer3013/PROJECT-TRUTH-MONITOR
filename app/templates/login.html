@@ -1,0 +1,55 @@
+{% set login_error = error|default("") %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Sign in - ProjectTruth Monitor</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#login-form">Skip to sign in</a>
+  <main class="login-page">
+    <section class="login-story" aria-labelledby="product-title">
+      <a class="brand" href="/login" aria-label="ProjectTruth Monitor">
+        <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 34 9v10c0 8.8-5.8 15.3-14 18C11.8 34.3 6 27.8 6 19V9l14-6Z"/><path d="m13 20 4.2 4.2L27.8 13.6"/></svg>
+        <span><strong>ProjectTruth</strong><small>Monitor</small></span>
+      </a>
+      <div class="login-story__copy">
+        <span class="kicker" style="color: var(--lime)">Real-estate project intelligence</span>
+        <h1 id="product-title">Track what changed. Show the evidence.</h1>
+        <p>Monitor permitted public sources and authorized documents with immutable history, field-level provenance, and human review.</p>
+      </div>
+      <div class="login-principles" aria-label="Product principles">
+        <span>Evidence linked</span><span>Uncertainty visible</span><span>Human reviewed</span><span>Fixture-safe demo</span>
+      </div>
+    </section>
+    <section class="login-form-wrap" aria-labelledby="sign-in-title">
+      <form id="login-form" class="login-form" action="/login" method="post">
+        <span class="kicker">Secure workspace</span>
+        <h2 id="sign-in-title">Welcome back</h2>
+        <p>Sign in to your organization's monitoring workspace.</p>
+        {% if login_error %}<div class="notice notice--danger" role="alert"><strong>We could not sign you in.</strong><p>{{ login_error|e }}</p></div>{% endif %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token|default('', true)|e }}">
+        <input type="hidden" name="next" value="{{ next_url|default('/dashboard', true)|e }}">
+        <div class="field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="username" required autofocus value="{{ submitted_email|default('', true)|e }}">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" minlength="10" required>
+        </div>
+        <label class="checkbox-field"><input type="checkbox" name="remember" value="true"><span><strong>Keep me signed in on this device</strong><small>Do not use this option on a shared computer.</small></span></label>
+        <button class="button button--primary" type="submit">Sign in</button>
+        <div class="login-help">
+          <strong>Local demo only</strong><br>
+          Use a seeded demo account from the README. Demo credentials must never be reused outside local development.
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

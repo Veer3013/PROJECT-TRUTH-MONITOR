@@ -1,0 +1,10 @@
+{% set project = project|default({}) %}
+{% set project_id = project.id|default(project_id|default("demo"), true) %}
+<nav class="subnav" aria-label="Project views">
+  <a href="/projects/{{ project_id|e }}" {% if project_tab == 'profile' %}aria-current="page"{% endif %}>Profile</a>
+  <a href="/projects/{{ project_id|e }}/passport" {% if project_tab == 'passport' %}aria-current="page"{% endif %}>Truth Passport</a>
+  <a href="/projects/{{ project_id|e }}/phase-map" {% if project_tab == 'phases' %}aria-current="page"{% endif %}>Phase map</a>
+  <a href="/projects/{{ project_id|e }}/timeline" {% if project_tab == 'timeline' %}aria-current="page"{% endif %}>Timeline</a>
+  <a href="/projects/{{ project_id|e }}/changes" {% if project_tab == 'changes' %}aria-current="page"{% endif %}>Change ledger</a>
+  <a href="/projects/{{ project_id|e }}/documents" {% if project_tab == 'documents' %}aria-current="page"{% endif %}>Documents</a>
+</nav>

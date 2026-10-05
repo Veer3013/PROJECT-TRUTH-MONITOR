@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "macros/ui.html" import badge, metric, source_meta, field_value, confidence_dimension %}
+{% set active_page = "watchlists" %}
+{% set project = project|default({}) %}
+{% set project_id = project.id|default(project_id|default("demo"), true) %}
+{% set passport = passport|default({}) %}
+{% set confidence = confidence|default({}) %}
+{% set project_tab = "passport" %}
+{% block title %}Truth Passport - {{ project.name|default("Project", true) }}{% endblock %}
+{% block content %}
+<header class="page-header"><div><span class="kicker">Project Truth Passport</span><h1>{{ project.name|default("Project identity pending", true)|e }}</h1><p>A current trust and monitoring summary - not a prediction, recommendation, or legal conclusion.</p></div><div class="page-header__actions"><a class="button button--secondary" href="/projects/{{ project_id|e }}/timeline">View history</a><a class="button button--primary" href="/projects/{{ project_id|e }}/changes">Open change ledger</a></div></header>
+{% include "partials/_project_tabs.html" %}
+{{ source_meta(passport.primary_source_name|default("Official source not captured"), passport.freshness|default("Not yet verified"), passport.monitoring_coverage|default("unverified"), passport.source_date|default("")) }}
+{% if passport.monitoring_coverage|default("") in ["blocked", "stale", "partial", "degraded"] %}<div class="notice notice--warning" style="margin-top: .8rem"><strong>Monitoring {{ passport.monitoring_coverage|e }}. Last verified on {{ passport.last_successful_verification|default("an unavailable date", true)|e }}.</strong><p>{{ passport.monitoring_message|default("Current source access is incomplete; this does not mean there was no change.", true)|e }}</p></div>{% endif %}
+
+<div class="metric-grid" style="margin-top: .8rem">
+  {{ metric("Identity", passport.identity_status|default("Unverified"), project.registration_number|default("No registration captured"), "success" if passport.identity_status|default("") == "Confirmed" else "warning") }}
+  {{ metric("Official sources", passport.official_source_count|default(0), (passport.marketing_source_count|default(0)|string) ~ " marketing / user sources", "info") }}
+  {{ metric("Open alerts", passport.open_alerts|default(0), "Items requiring review", "warning", "/alerts?project_id=" ~ project_id) }}
+  {{ metric("Unresolved conflicts", passport.unresolved_conflicts|default(0), "All source values preserved", "danger", "/conflicts?project_id=" ~ project_id) }}
+</div>
+
+<div class="layout-main-aside" style="margin-top: 1rem">
+  <section class="stack">
+    <section class="panel"><div class="panel__header"><div><h2>Official record summary</h2><p>Most recent captured official values with freshness shown above.</p></div>{{ badge(passport.official_status|default("Unverified", true), "success" if passport.official_status|default("") in ["Active", "Registered"] else "warning") }}</div><dl class="fact-grid">{{ field_value("Registration", project.registration_number|default("")) }}{{ field_value("Parent / phase", passport.parent_phase_label|default(project.phase_name|default(""))) }}{{ field_value("Official completion", passport.official_completion_date|default(""), passport.completion_note|default("")) }}{{ field_value("Official status", passport.official_status|default("")) }}{{ field_value("Last successful verification", passport.last_successful_verification|default("")) }}{{ field_value("History tracking since", passport.history_start_date|default("")) }}</dl></section>
+    <section class="panel"><div class="panel__header"><div><h2>Latest reviewer decision</h2><p>Recorded human decisions remain in the audit history.</p></div></div><div class="panel__body">{% set decision = passport.latest_reviewer_decision|default({}) %}{% if decision %}<div class="cluster">{{ badge(decision.decision|default("Recorded", true), "info") }}<strong>{{ decision.reviewer_name|default("Authenticated reviewer", true)|e }}</strong><span class="field__hint">{{ decision.decided_at|default("Time not recorded", true)|e }}</span></div><p>{{ decision.note|default("No reviewer note was supplied.", true)|e }}</p>{% else %}<p class="disclaimer">No reviewer decision has been recorded for this project.</p>{% endif %}</div></section>
+  </section>
+  <aside class="panel"><div class="panel__header"><div><h2>Monitoring confidence</h2><p>Separate dimensions - no hidden composite score.</p></div></div><div class="panel__body">
+    {{ confidence_dimension("Source reliability", confidence.source_reliability_band|default("Unverified"), confidence.source_reliability|default(0)) }}
+    {{ confidence_dimension("Access completeness", confidence.access_completeness_band|default("Unverified"), confidence.access_completeness|default(0)) }}
+    {{ confidence_dimension("Project identity", confidence.identity_band|default("Unverified"), confidence.identity|default(0)) }}
+    {{ confidence_dimension("Extraction", confidence.extraction_band|default("Unverified"), confidence.extraction|default(0)) }}
+    {{ confidence_dimension("Change", confidence.change_band|default("Unverified"), confidence.change|default(0)) }}
+    {{ confidence_dimension("Freshness", confidence.freshness_band|default("Unverified"), confidence.freshness|default(0)) }}
+    <div class="notice {{ 'notice--warning' if passport.unresolved_conflicts|default(0)|int else '' }}" style="margin-top: .75rem"><strong>Conflict state: {{ confidence.conflict_state|default("No assessed conflict", true)|e }}</strong><p>{{ confidence.limitation|default("Confidence depends on permitted source access and captured evidence.", true)|e }}</p></div>
+  </div></aside>
+</div>
+<p class="disclaimer">This passport summarizes captured evidence and review state. It does not predict completion, verify title, certify compliance, or recommend a property decision.</p>
+{% endblock %}

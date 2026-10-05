@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: sqlite:////app/data/projecttruth.db
+      UPLOAD_DIR: /app/data/uploads
+      REPORT_DIR: /app/data/reports
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      SESSION_COOKIE_SECURE: "false"
+      ENABLE_LIVE_HRERA: "false"
+    command:
+      - /bin/sh
+      - -c
+      - python -m alembic upgrade head && python -m app.seed_demo && exec python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - projecttruth_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  projecttruth_data:
